@@ -4,7 +4,8 @@ import cron from 'node-cron';
 import dotenv from 'dotenv';
 import multer from 'multer';
 import { fetchMarketOrders } from './marketDataFetcher.js';
-import { initializeDatabase, updateMarketData, getLatestMarketData, backupDatabase, processSDE } from './database.js';
+import { initializeDatabase, updateMarketData, getLatestMarketData, backupDatabase } from './database.js';
+import { initiatliseSDE, processSDE} from './sde.js';
 import path from 'path';
 import fs from 'fs';
 
@@ -12,6 +13,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3000;
+const processState = null;
 
 app.use(cors());
 app.use(express.json());
@@ -71,14 +73,18 @@ app.post('/api/upload-sde', upload.single('sde'), async (req, res) => {
   const filePath = req.file.path;
   
   // Start processing the SDE file
+  processState = "processing";
   processSDE(filePath)
     .then(() => {
       console.log('SDE processing completed');
+      processState = "Complete";
+
       // Clean up the uploaded file
       fs.unlinkSync(filePath);
     })
     .catch((error) => {
       console.error('Error processing SDE:', error);
+      processState = "Failed";
       // Clean up the uploaded file
       fs.unlinkSync(filePath);
     });
@@ -90,7 +96,7 @@ app.post('/api/upload-sde', upload.single('sde'), async (req, res) => {
 app.get('/api/sde-status', (req, res) => {
   // You'll need to implement a way to track the SDE processing status
   // For now, we'll just return a mock status
-  res.json({ status: 'processing' });
+  res.json({ status: "processState"} });
 });
 
 app.listen(port, () => {
