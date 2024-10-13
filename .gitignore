@@ -25,3 +25,6 @@ dist-ssr
 
 # SQLite database and backups
 data/
+
+# Ephemeral Uploads
+uploads/

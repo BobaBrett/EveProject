@@ -53,10 +53,10 @@ const AdminPage: React.FC<AdminPageProps> = ({ onClose }) => {
         const statusResponse = await fetch('http://localhost:3000/api/sde-status');
         const statusData = await statusResponse.json();
         
-        if (statusData.status === 'completed') {
+        if (statusData.status === 'Complete') {
           clearInterval(pollStatus);
           setUploadStatus('SDE data processed successfully!');
-        } else if (statusData.status === 'failed') {
+        } else if (statusData.status === 'Failed') {
           clearInterval(pollStatus);
           setUploadStatus('SDE data processing failed. Please try again.');
         }
