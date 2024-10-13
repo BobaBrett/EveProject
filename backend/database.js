@@ -30,28 +30,12 @@ export async function initializeDatabase() {
     )
   `);
 
-  // Add more tables for SDE data as needed
-  await db.exec(`
-    CREATE TABLE IF NOT EXISTS invTypes (
-      typeID INTEGER PRIMARY KEY,
-      groupID INTEGER,
-      typeName TEXT,
-      description TEXT,
-      mass REAL,
-      volume REAL,
-      capacity REAL,
-      portionSize INTEGER,
-      raceID INTEGER,
-      basePrice REAL,
-      published BOOLEAN,
-      marketGroupID INTEGER,
-      iconID INTEGER,
-      soundID INTEGER
-    )
-  `);
+
+  return db;
 }
 
-export async function updateMarketData(orders) {
+
+export async function updateMarketData(db, orders) {
   const stmt = await db.prepare(`
     INSERT OR REPLACE INTO market_orders 
     (order_id, duration, is_buy_order, issued, location_id, min_volume, price, range, type_id, volume_remain, volume_total, updated_at)
@@ -77,7 +61,7 @@ export async function updateMarketData(orders) {
   await stmt.finalize();
 }
 
-export async function getLatestMarketData() {
+export async function getLatestMarketData(db) {
   return db.all('SELECT * FROM market_orders ORDER BY updated_at DESC LIMIT 1000');
 }
 
@@ -101,76 +85,4 @@ export async function backupDatabase() {
   });
 
   console.log(`Database backed up to ${backupPath}`);
-}
-
-export async function processSDE(filePath) {
-  return new Promise((resolve, reject) => {
-    const readStream = fs.createReadStream(filePath);
-    const unzipStream = readStream.pipe(bz2());
-
-    let buffer = '';
-    unzipStream.on('data', (chunk) => {
-      buffer += chunk.toString();
-      const lines = buffer.split('\n');
-      buffer = lines.pop();
-
-      lines.forEach(async (line) => {
-        try {
-          const data = JSON.parse(line);
-          if (data.typeID) {
-            await insertInvType(data);
-          }
-          // Add more conditions for other SDE tables
-        } catch (error) {
-          console.error('Error processing SDE line:', error);
-        }
-      });
-    });
-
-    unzipStream.on('end', () => {
-      if (buffer.length > 0) {
-        try {
-          const data = JSON.parse(buffer);
-          if (data.typeID) {
-            insertInvType(data);
-          }
-          // Add more conditions for other SDE tables
-        } catch (error) {
-          console.error('Error processing last SDE line:', error);
-        }
-      }
-      resolve();
-    });
-
-    unzipStream.on('error', (error) => {
-      reject(error);
-    });
-  });
-}
-
-async function insertInvType(data) {
-  const stmt = await db.prepare(`
-    INSERT OR REPLACE INTO invTypes 
-    (typeID, groupID, typeName, description, mass, volume, capacity, portionSize, raceID, basePrice, published, marketGroupID, iconID, soundID)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  await stmt.run(
-    data.typeID,
-    data.groupID,
-    data.typeName,
-    data.description,
-    data.mass,
-    data.volume,
-    data.capacity,
-    data.portionSize,
-    data.raceID,
-    data.basePrice,
-    data.published,
-    data.marketGroupID,
-    data.iconID,
-    data.soundID
-  );
-
-  await stmt.finalize();
 }
