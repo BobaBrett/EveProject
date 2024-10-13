@@ -96,7 +96,7 @@ app.post('/api/upload-sde', upload.single('sde'), async (req, res) => {
 app.get('/api/sde-status', (req, res) => {
   // You'll need to implement a way to track the SDE processing status
   // For now, we'll just return a mock status
-  res.json({ status: "processState"} });
+  res.json({ status: {processState} });
 });
 
 app.listen(port, () => {
