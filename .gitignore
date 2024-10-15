@@ -30,4 +30,5 @@ data/
 uploads/
 
 # dotEnv
-.env
+.env    
+.env.local
