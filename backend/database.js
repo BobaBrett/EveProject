@@ -7,7 +7,7 @@ import bz2 from 'unbzip2-stream';
 let db;
 
 export async function initializeDatabase() {
-  const dbPath = path.join(process.cwd(), 'data', 'market_data.sqlite');
+  const dbPath = path.join(process.cwd(), 'data', 'projectDB.sqlite');
   db = await open({
     filename: dbPath,
     driver: sqlite3.Database
@@ -27,7 +27,13 @@ export async function initializeDatabase() {
       volume_remain INTEGER,
       volume_total INTEGER,
       updated_at TEXT
-    )
+    );
+    CREATE TABLE IF NOT EXISTS auth_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      access_token TEXT,
+      refresh_token TEXT,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 
 
@@ -66,14 +72,14 @@ export async function getLatestMarketData(db) {
 }
 
 export async function backupDatabase() {
-  const dbPath = path.join(process.cwd(), 'data', 'market_data.sqlite');
+  const dbPath = path.join(process.cwd(), 'data', 'projectdb.sqlite');
   const backupDir = path.join(process.cwd(), 'data', 'backups');
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
   }
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const backupPath = path.join(backupDir, `market_data_${timestamp}.sqlite`);
+  const backupPath = path.join(backupDir, `projectdb_${timestamp}.sqlite`);
 
   await db.close();
   fs.copyFileSync(dbPath, backupPath);
@@ -85,4 +91,9 @@ export async function backupDatabase() {
   });
 
   console.log(`Database backed up to ${backupPath}`);
+}
+
+export async function getLatestAuthToken(db) {
+  const row = await db.get('SELECT access_token FROM auth_tokens ORDER BY updated_at DESC LIMIT 1');
+  return row ? row.access_token : null;
 }

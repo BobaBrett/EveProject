@@ -1,11 +1,23 @@
 import axios from 'axios';
+import { getLatestAuthToken } from './database.js';
 
+const LOCAL_API_URL = 'http://localhost:3000/api/esi';
 const STRUCTURE_ID = 1035466617946;
-const ESI_BASE_URL = 'https://esi.evetech.net/latest';
 
 export async function fetchMarketOrders() {
   try {
-    const response = await axios.get(`${ESI_BASE_URL}/markets/structures/${STRUCTURE_ID}/`, {
+    //const db = await getDatabase();
+    const accessToken = await getLatestAuthToken(db);
+
+    if (!accessToken) {
+      console.error('No access token found');
+      return;
+    }
+
+    const response = await axios.get(`${LOCAL_API_URL}/markets/structures/${STRUCTURE_ID}/`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
       params: {
         datasource: 'tranquility',
         page: 1
@@ -17,7 +29,10 @@ export async function fetchMarketOrders() {
 
     // Fetch all pages
     while (response.headers['x-pages'] && page <= parseInt(response.headers['x-pages'])) {
-      const nextPageResponse = await axios.get(`${ESI_BASE_URL}/markets/structures/${STRUCTURE_ID}/`, {
+      const nextPageResponse = await axios.get(`${LOCAL_API_URL}/markets/structures/${STRUCTURE_ID}/`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
         params: {
           datasource: 'tranquility',
           page: page

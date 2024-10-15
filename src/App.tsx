@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Home from './components/Home';
+import Callback from './components/Callback';
+import Dashboard from './components/Dashboard';
 import { Rocket } from 'lucide-react';
 import MarketAnalysis from './components/MarketAnalysis';
 import { MarketOrder } from './types/MarketOrder';
@@ -9,7 +14,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
-
+  /*
   useEffect(() => {
     fetchLatestMarketData();
   }, []);
@@ -29,7 +34,7 @@ function App() {
     } finally {
       setIsLoading(false);
     }
-  };
+  };*/
 
   return (
     <div className="min-h-screen bg-gray-100 py-8 px-4">
@@ -45,7 +50,7 @@ function App() {
         </header>
         <div className="mb-6">
           <button
-            onClick={fetchLatestMarketData}
+           // onClick={fetchLatestMarketData}
             className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded mr-4"
             disabled={isLoading}
           >
@@ -58,6 +63,15 @@ function App() {
             Admin Page
           </button>
         </div>
+        <Router>
+      <div className="min-h-screen bg-gray-100">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/callback" element={<Callback />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+        </Routes>
+      </div>
+    </Router>
         {error && <p className="text-red-500 mb-4">{error}</p>}
         {isAdmin ? (
           <AdminPage onClose={() => setIsAdmin(false)} />
